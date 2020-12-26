@@ -24,106 +24,108 @@ int main(int argc, char **argv) {
 
 	Hashmap *map = HASHMAP_create();
 
-	struct dirent *dir;
-	DIR *d = open_directory(argv[1]);
-
-	int path_len = strlen(argv[1]);
-	char *full_path = malloc(path_len + 256);
-	strcpy(full_path, argv[1]);
-	full_path[path_len++] = '/';
-
-	while((dir = readdir(d)) != NULL) {
-		if (dir->d_name[0] == '.' || dir->d_type == DT_DIR) {
-			continue;
-		}
-		strcpy(&full_path[path_len], dir->d_name);
-		FILE *f = fopen(full_path, "r");
-
-		// SCAN FILE
-		char name_str[] = "\nName=";
-		char exec_str[] = "\nExec=";
-
-		int name_idx = 0;
-		int exec_idx = 0;
-
-		int name_found = 0;
-		int exec_found = 0;
-
-		char name_buff[256];
-		char exec_buff[256];
-
-		int c;
-		while ( (c = fgetc(f)) != EOF) {
-
-			if (!name_found) {
-				if (c == name_str[name_idx]) {
-					name_idx++;
-				} else if (c == name_str[0]) {
-					name_idx = 1;
-				} else {
-					name_idx = 0;
-				}
-
-				if (name_idx == sizeof(name_str) - 1) {
-					name_found = 1;
-					name_idx = 0;
-					c = fgetc(f);
-					while (c != '\n') {
-						if (c == EOF) {
-							name_buff[name_idx++] = '\0';
-							break;
-						}
-						name_buff[name_idx++] = c;
+	for (int i = 1; i < argc; i++) {
+		struct dirent *dir;
+		DIR *d = open_directory(argv[i]);
+	
+		int path_len = strlen(argv[i]);
+		char *full_path = malloc(path_len + 256);
+		strcpy(full_path, argv[i]);
+		full_path[path_len++] = '/';
+	
+		while((dir = readdir(d)) != NULL) {
+			if (dir->d_name[0] == '.' || dir->d_type == DT_DIR) {
+				continue;
+			}
+			strcpy(&full_path[path_len], dir->d_name);
+			FILE *f = fopen(full_path, "r");
+	
+			// SCAN FILE
+			char name_str[] = "\nName=";
+			char exec_str[] = "\nExec=";
+	
+			int name_idx = 0;
+			int exec_idx = 0;
+	
+			int name_found = 0;
+			int exec_found = 0;
+	
+			char name_buff[256];
+			char exec_buff[256];
+	
+			int c;
+			while ( (c = fgetc(f)) != EOF) {
+	
+				if (!name_found) {
+					if (c == name_str[name_idx]) {
+						name_idx++;
+					} else if (c == name_str[0]) {
+						name_idx = 1;
+					} else {
+						name_idx = 0;
+					}
+	
+					if (name_idx == sizeof(name_str) - 1) {
+						name_found = 1;
+						name_idx = 0;
 						c = fgetc(f);
-					}
-					name_buff[name_idx++] = '\0';
-					if (!exec_found) {
-						exec_idx=1;
-					}
-				}
-			}
-
-			if (!exec_found) {
-				if (c == exec_str[exec_idx]) {
-					exec_idx++;
-				} else if (c == exec_str[0]) {
-					exec_idx = 1;
-				} else {
-					exec_idx = 0;
-				}
-
-				if (exec_idx == sizeof(exec_str) - 1) {
-					exec_found = 1;
-					exec_idx = 0;
-					c = fgetc(f);
-					while (c != '\n') {
-						if (c == EOF) {
-							exec_buff[exec_idx++] = '\0';
-							break;
+						while (c != '\n') {
+							if (c == EOF) {
+								name_buff[name_idx++] = '\0';
+								break;
+							}
+							name_buff[name_idx++] = c;
+							c = fgetc(f);
 						}
-						exec_buff[exec_idx++] = c;
-						c = fgetc(f);
-					}
-					exec_buff[exec_idx++] = '\0';
-					if (!name_found) {
-						name_idx=1;
+						name_buff[name_idx++] = '\0';
+						if (!exec_found) {
+							exec_idx=1;
+						}
 					}
 				}
+	
+				if (!exec_found) {
+					if (c == exec_str[exec_idx]) {
+						exec_idx++;
+					} else if (c == exec_str[0]) {
+						exec_idx = 1;
+					} else {
+						exec_idx = 0;
+					}
+	
+					if (exec_idx == sizeof(exec_str) - 1) {
+						exec_found = 1;
+						exec_idx = 0;
+						c = fgetc(f);
+						while (c != '\n') {
+							if (c == EOF) {
+								exec_buff[exec_idx++] = '\0';
+								break;
+							}
+							exec_buff[exec_idx++] = c;
+							c = fgetc(f);
+						}
+						exec_buff[exec_idx++] = '\0';
+						if (!name_found) {
+							name_idx=1;
+						}
+					}
+				}
+	
+				if (name_found && exec_found) {
+					break;
+				}
 			}
-
-			if (name_found && exec_found) {
-				break;
-			}
+	
+			char *exec = malloc(exec_idx);
+			strcpy(exec, exec_buff);
+	
+			map = HASHMAP_put(map, name_buff, exec);
+	
 		}
-
-		char *exec = malloc(exec_idx);
-		strcpy(exec, exec_buff);
-
-		map = HASHMAP_put(map, name_buff, exec);
-
+	
+		closedir(d);
 	}
-
-	closedir(d);
 
 	// FORK DMENU
 	int fd2[2];
@@ -164,10 +166,8 @@ int main(int argc, char **argv) {
 	char *args[64];
 	int args_idx = 0;
 
-	char *arg;
-	args[args_idx++] = strtok(exec_string, " ");
+	char *arg = strtok(exec_string, " ");
 	do {
-		arg = strtok(NULL, " ");
 		if (
 			strcmp(arg, "%u") &&
 			strcmp(arg, "%U") &&
@@ -176,7 +176,10 @@ int main(int argc, char **argv) {
 		) {
 			args[args_idx++] = arg;
 		}
+		arg = strtok(NULL, " ");
 	} while (arg != NULL);
+	
+	args[args_idx++] = NULL;
 
 	execvp(args[0], args);
 

@@ -14,9 +14,9 @@ bin:
 bin/hashmap.o: src/hashmap.c src/hashmap.h
 	gcc -Wall -c $< -o $@
 
-bin/menu.o: src/menu.o
-	gcc -Wall -c $< -o $@
+bin/menu.o: src/menu.c
+	gcc -Wall -c $< -o $@ -g
 
 menu: bin/menu.o bin/hashmap.o
-	gcc -Wall $^ -o $@
+	gcc -Wall $^ -o $@ -g
 
