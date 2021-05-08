@@ -37,6 +37,12 @@ int main(int argc, char **argv) {
 			if (dir->d_name[0] == '.' || dir->d_type == DT_DIR) {
 				continue;
 			}
+
+			char *dot = strrchr(dir->d_name, '.');
+			if (!dot || strcmp(dot, ".desktop")) {
+				continue;
+			}
+
 			strcpy(&full_path[path_len], dir->d_name);
 			FILE *f = fopen(full_path, "r");
 
@@ -50,8 +56,8 @@ int main(int argc, char **argv) {
 			int name_found = 0;
 			int exec_found = 0;
 
-			char name_buff[256];
-			char exec_buff[256];
+			char name_buff[512];
+			char exec_buff[512];
 
 			int c;
 			while ( (c = fgetc(f)) != EOF) {
