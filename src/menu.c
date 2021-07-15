@@ -6,9 +6,10 @@
 #include <dirent.h>
 #include <string.h>
 #include <errno.h>
+#include <stdint.h>
 #include <sys/wait.h>
 
-#include "hashmap.h"
+#include "hashmap/hashmap.h"
 
 DIR *open_directory(char *path);
 void print_names(char *key, void *value);
@@ -28,7 +29,7 @@ int main(int argc, char **argv) {
 		struct dirent *dir;
 		DIR *d = open_directory(argv[i]);
 
-		int path_len = strlen(argv[i]);
+		size_t path_len = strlen(argv[i]);
 		char *full_path = malloc(path_len + 256);
 		strcpy(full_path, argv[i]);
 		full_path[path_len++] = '/';
@@ -50,11 +51,11 @@ int main(int argc, char **argv) {
 			char name_str[] = "\nName=";
 			char exec_str[] = "\nExec=";
 
-			int name_idx = 0;
-			int exec_idx = 0;
+			uint32_t name_idx = 0;
+			uint32_t exec_idx = 0;
 
-			int name_found = 0;
-			int exec_found = 0;
+			uint8_t name_found = 0;
+			uint8_t exec_found = 0;
 
 			char name_buff[512];
 			char exec_buff[512];

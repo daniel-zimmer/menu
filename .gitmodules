@@ -1,0 +1,3 @@
+[submodule "src/hashmap"]
+	path = src/hashmap
+	url = https://github.com/daniel-zimmer/hashmap

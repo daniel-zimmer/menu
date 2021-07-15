@@ -3,7 +3,10 @@ build: bin menu
 clean:
 	rm -rf bin menu
 
-.PHONY: build clean
+install:
+	sudo mv menu /usr/local/bin
+
+.PHONY: build clean install
 
 ##################################################
 
@@ -11,12 +14,13 @@ clean:
 bin:
 	mkdir -p bin
 
-bin/hashmap.o: src/hashmap.c src/hashmap.h
-	gcc -Wall -c $< -o $@
+bin/hashmap.o: src/hashmap/hashmap.c src/hashmap/hashmap.h
+	(cd src/hashmap; make build)
+	mv src/hashmap/hashmap.o bin/
 
 bin/menu.o: src/menu.c
-	gcc -Wall -c $< -o $@ -g
+	gcc -Wall -c $< -o $@ -O3
 
 menu: bin/menu.o bin/hashmap.o
-	gcc -Wall $^ -o $@ -g
-
+	gcc -Wall $^ -o $@ -O3
+	strip menu
