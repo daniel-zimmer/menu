@@ -1,3 +1,6 @@
 [submodule "src/hashmap"]
 	path = src/hashmap
 	url = https://github.com/daniel-zimmer/hashmap
+[submodule "src/tiny-regex-c"]
+	path = src/tiny-regex-c
+	url = https://github.com/kokke/tiny-regex-c

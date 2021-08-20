@@ -19,8 +19,8 @@ bin/hashmap.o: src/hashmap/hashmap.c src/hashmap/hashmap.h
 	mv src/hashmap/hashmap.o bin/
 
 bin/menu.o: src/menu.c
-	gcc -Wall -c $< -o $@ -O3
+	gcc -Wall -c $< -o $@ -O3 -g
 
 menu: bin/menu.o bin/hashmap.o
-	gcc -Wall $^ -o $@ -O3
+	gcc -Wall $^ -o $@ -O3 -g
 	strip menu
