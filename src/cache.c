@@ -102,6 +102,7 @@ void CACHE_build() {
 			fprintf(cache, "%s\t%s\n", name, exec);
 		}
 
+		fclose(f);
 	}
 
 	close(out);
