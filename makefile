@@ -6,6 +6,7 @@ clean:
 	rm -rf bin menu
 
 install:
+	mkdir ~/.cache
 	strip menu
 	sudo mv menu /usr/local/bin
 

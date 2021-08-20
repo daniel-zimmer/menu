@@ -21,6 +21,12 @@ int printNamesInFd;
 
 int main(int argc, char **argv) {
 
+	char *cachePath = CACHE_getPath();
+	if(access(cachePath, F_OK) != 0) { // cache does not exist
+		CACHE_build();
+		wait(NULL);
+	}
+
 	char *exec = runFromCache();
 	printf("%s\n", exec ? exec : "null");
 

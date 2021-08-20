@@ -23,7 +23,7 @@ static void execcpy(char *dest, char *src, uint32_t len);
 
 char cachePath[CACHE_PATH_BUFF_SIZE] = {0};
 
-static char *getCachePath() {
+char *CACHE_getPath() {
 	if (!*cachePath) {
 		strcpy(cachePath, getenv("HOME"));
 		strcat(cachePath, "/.cache/menu/menu-cache.txt");
@@ -33,7 +33,7 @@ static char *getCachePath() {
 }
 
 Hashmap *CACHE_read(Hashmap *hm) {
-	char *path = getCachePath();
+	char *path = CACHE_getPath();
 
 	FILE *cache = fopen(path, "r");
 
@@ -54,7 +54,7 @@ Hashmap *CACHE_read(Hashmap *hm) {
 }
 
 void CACHE_build() {
-	char *cachePath = getCachePath();
+	char *cachePath = CACHE_getPath();
 
 	int in, out;
 	char *args[] = {"mlocate", "*/applications/*.desktop", NULL};
