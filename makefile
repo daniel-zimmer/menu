@@ -1,16 +1,20 @@
 CFLAGS = -Wno-int-conversion -O3 -g
 
 build: bin menu
+	mkdir -p ~/.cache/menu
 
 clean:
 	rm -rf bin menu
 
+uninstall: 
+	sudo rm /usr/local/bin/menu
+
 install:
-	mkdir ~/.cache
+	mkdir -p ~/.cache/menu
 	strip menu
 	sudo mv menu /usr/local/bin
 
-.PHONY: build clean install
+.PHONY: build clean install uninstall
 
 ##################################################
 

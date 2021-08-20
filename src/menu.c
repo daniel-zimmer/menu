@@ -28,7 +28,6 @@ int main(int argc, char **argv) {
 	}
 
 	char *exec = runFromCache();
-	printf("%s\n", exec ? exec : "null");
 
 	if (!fork()) {
 		CACHE_build();
