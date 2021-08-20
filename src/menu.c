@@ -8,69 +8,104 @@
 #include <sys/wait.h>
 
 #include "hashmap/hashmap.h"
+#include "cache.h"
+#include "helper.h"
 
-#define PATH_BUFF_SIZE 512
+#define EXEC_ARGS_COUNT 64
 
-void parseDesktopFile(char *path);
-void print_names(char *key, void *value);
-void call(int fd[2], char *args[]);
+char *runFromCache();
+void execcpy(char *dest, char *src, uint32_t len);
+void printNames(char *key, void *value);
+
+int printNamesInFd;
 
 int main(int argc, char **argv) {
 
-	Hashmap *hm = HASHMAP_create();
-
-	int fd[2];
-	char *args[] = {"mlocate", "*.desktop", NULL};
-	call(fd, args);
-	close(fd[1]);
-
-	char path[PATH_BUFF_SIZE];
-	int  pathIdx = 0;
-
-	char buff[1];
-	ssize_t len = read(fd[0], &buff, 1);
-	while (len) {
-
-		if (*buff == '\n'){
-
-			path[pathIdx] = '\0';
-			pathIdx = 0;
-			parseDesktopFile(path);
-
-		} else {
-			path[pathIdx++] = *buff;
-		}
-
-		len = read(fd[0], &buff, 1);
-	}
-
-	while (wait(NULL) > 0);
-
-}
-
-void parseDesktopFile(char *path) {
-	printf("------------------\n%s\n------------------------\n", path);
-
-	FILE *f = fopen(path, "r");
-
-	char c = 0;
-	while ((c = fgetc(f)) != EOF) {
-		putchar(c);
-	}
-}
-
-void call(int fd[2], char *args[]) {
-	pipe(fd);
+	char *exec = runFromCache();
+	printf("%s\n", exec ? exec : "null");
 
 	if (!fork()) {
-		dup2(fd[1], 1);
-		close(fd[0]); close(fd[1]);
-
-		execvp(args[0], args);
+		CACHE_build();
+		wait(NULL);
+		exit(0);
 	}
 
+	if (exec == NULL) {
+		return 0;
+	}
+
+	char *execArgs[EXEC_ARGS_COUNT];
+	uint8_t execArgsIdx = 0;
+
+	for(; *exec == ' '; exec++);
+	execArgs[execArgsIdx++] = exec;
+	while (*exec) {
+		if (*exec == ' ') {
+			for(; *exec == ' '; exec++){ *exec = '\0'; }
+			if (*exec == '\0') { break; }
+			if (*exec == '"') {
+				exec++; if (*exec == '\0') { break; }
+				for(execArgs[execArgsIdx++] = exec; *exec != '"' && *exec != '\0'; exec++);
+				if (*exec == '\0') { break; }
+				*exec = '\0';
+			}
+			if (*exec == '\'') {
+				exec++; if (*exec == '\0') { break; }
+				for(execArgs[execArgsIdx++] = exec; *exec != '\'' && *exec != '\0'; exec++);
+				if (*exec == '\0') { break; }
+				*exec = '\0';
+			}
+			execArgs[execArgsIdx++] = exec;
+		}
+
+		exec++;
+	}
+	execArgs[execArgsIdx] = NULL;
+
+	execvp(execArgs[0], execArgs);
+
+	return 0;
 }
 
-void print_names(char *key, void *value) {
-	//dprintf(fd[1], "%s\n", key);
+char *runFromCache() {
+	int in, out;
+
+	Hashmap *hm = HASHMAP_create();
+
+	hm = CACHE_read(hm);
+
+	char *args1[] = {"dmenu", "-i", "-nb", "#000", NULL};
+	HELPER_call(args1, &in, &out);
+
+	printNamesInFd = in;
+	HASHMAP_iterate(hm, printNames);
+
+	close(in);
+
+	int wstatus;
+	wait(&wstatus);
+
+	if (WIFEXITED(wstatus)) {
+		if (WEXITSTATUS(wstatus) != 0) {
+			return NULL;
+		}
+	} else {
+		return NULL;
+	}
+
+	char buff[256];
+	ssize_t len1 = read(out, &buff, 256);
+	buff[len1-1] = '\0';
+
+	close(out);
+
+	char *exec = strdup(HASHMAP_get(hm, buff));
+
+	HASHMAP_delete(hm, HASHMAP_freeDel);
+
+	return exec;
+}
+
+void printNames(char *key, void *value) {
+	dprintf(printNamesInFd, "%s\n", key);
 }

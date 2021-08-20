@@ -1,9 +1,12 @@
+CFLAGS = -Wno-int-conversion -O3 -g
+
 build: bin menu
 
 clean:
 	rm -rf bin menu
 
 install:
+	strip menu
 	sudo mv menu /usr/local/bin
 
 .PHONY: build clean install
@@ -18,9 +21,14 @@ bin/hashmap.o: src/hashmap/hashmap.c src/hashmap/hashmap.h
 	(cd src/hashmap; make build)
 	mv src/hashmap/hashmap.o bin/
 
-bin/menu.o: src/menu.c
-	gcc -Wall -c $< -o $@ -O3 -g
+bin/helper.o: src/helper.c src/helper.h
+	gcc -Wall ${CFLAGS} -c $< -o $@
 
-menu: bin/menu.o bin/hashmap.o
-	gcc -Wall $^ -o $@ -O3 -g
-	strip menu
+bin/cache.o: src/cache.c src/cache.h
+	gcc -Wall ${CFLAGS} -c $< -o $@
+
+bin/menu.o: src/menu.c
+	gcc -Wall ${CFLAGS} -c $< -o $@
+
+menu: bin/menu.o bin/hashmap.o bin/cache.o bin/helper.o
+	gcc -Wall ${CFLAGS} $^ -o $@
