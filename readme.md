@@ -24,7 +24,7 @@ sudo apt install git make gcc dmenu mlocate
 Then, you just have to clone the repository and run `make build install` inside it:
 
 ```sh
-git clone https://github.com/daniel-zimmer/menu.git
+git clone --recursive https://github.com/daniel-zimmer/menu.git
 cd menu
 make build install
 ```
