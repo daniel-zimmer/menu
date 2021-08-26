@@ -13,12 +13,12 @@ Simple Linux Application Launcher
 
 ## How to Install
 
-Make sure you have `git`, `make`, `gcc` and `dmenu` installed.
+Make sure you have `git`, `make`, `gcc`, `mlocate` and `dmenu` installed.
 
 On a debian based distro, you can run:
 
 ```sh
-sudo apt install git make gcc dmenu
+sudo apt install git make gcc dmenu mlocate
 ```
 
 Then, you just have to clone the repository and run `make build install` inside it:
